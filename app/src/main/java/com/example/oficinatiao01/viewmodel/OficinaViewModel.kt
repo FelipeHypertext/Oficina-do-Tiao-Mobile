@@ -9,6 +9,8 @@ import com.example.oficinatiao01.model.Veiculo
 class OficinaViewModel : ViewModel() {
     private val listaVeiculos = mutableListOf<Veiculo>()
 
+    var contaCarro by mutableStateOf(0)
+        private set
     var placaNaoEncontrada by mutableStateOf(false)
         private set
 
@@ -29,7 +31,6 @@ class OficinaViewModel : ViewModel() {
 
     var idTipoCombustivel by mutableStateOf(1)
         private set
-
 
     fun atualizarPlaca(texto: String) {
         placa = texto
@@ -55,16 +56,25 @@ class OficinaViewModel : ViewModel() {
     }
 
     fun buscarPlaca() {
-
         if (placa.isBlank()) {
             return
         }
 
-        val veiculo = listaVeiculos.find {
-            it.placa == placa
+        val veiculoEncontrado = listaVeiculos.find {
+            it.placa.uppercase() == placa.uppercase()
         }
 
-        placaNaoEncontrada = veiculo == null
+        if (veiculoEncontrado == null) {
+            placaNaoEncontrada = true
+        } else {
+            placaNaoEncontrada = false
+            marca = veiculoEncontrado.marca
+            modelo = veiculoEncontrado.modelo
+            ano = veiculoEncontrado.ano.toString()
+            idTipoCombustivel =
+                veiculoEncontrado.idTipoCombustivel
+            exibirCadastroVeiculo = true
+        }
     }
 
     fun abrirCadastroVeiculo() {
@@ -72,10 +82,17 @@ class OficinaViewModel : ViewModel() {
     }
 
     fun incluirVeiculo() {
-
         val anoInt = ano.toIntOrNull() ?: return
+        val veiculoAchado = listaVeiculos.find {
+            it.placa.uppercase() == placa.uppercase()
+        }
 
-        listaVeiculos.add(
+        if (veiculoAchado != null) {
+            reiniciarTela()
+            return
+        }
+
+         listaVeiculos.add(
             Veiculo(
                 placa = placa,
                 marca = marca,
@@ -85,11 +102,12 @@ class OficinaViewModel : ViewModel() {
             )
         )
 
+//        contaCarro++
+        contaCarro = listaVeiculos.count()
         reiniciarTela()
     }
 
     fun reiniciarTela() {
-
         placa = ""
         marca = ""
         modelo = ""

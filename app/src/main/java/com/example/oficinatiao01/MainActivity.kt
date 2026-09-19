@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.oficinatiao01.ui.theme.OficinaTiao01Theme
 import com.example.oficinatiao01.viewmodel.OficinaViewModel
 
-val AmareloClaro = Color(0xFFE6D690)
+val AzulClaro = Color(0xFF536DFE)
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -59,33 +61,58 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaPrincipal() {
+    val viewModel: OficinaViewModel = viewModel()
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Oficina do Tião",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold)
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Oficina do Tião",
+                             fontSize = 28.sp,
+                             fontWeight = FontWeight.Bold
+                        )
+                        Text(text = "Carros: ${viewModel.contaCarro}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 5.dp)
+                        )
+                    }
                 },
                 colors = androidx.compose.material3.TopAppBarDefaults
-                    .topAppBarColors(containerColor = AmareloClaro)
+                    .topAppBarColors(containerColor = AzulClaro)
             )
         }
     ) { paddingValues ->
         OficinaTiaoAbertura(
             modifier = Modifier.padding(paddingValues)
+            ,viewModel
         )
     }
 }
 
 @Composable
 fun OficinaTiaoAbertura(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: OficinaViewModel,
+
 ) {
     val viewModel: OficinaViewModel = viewModel()
+    val viewModel: PessoaViewModel = viewModel()
 
     if (viewModel.exibirCadastroVeiculo) {
         CadastroVeiculo(
+            viewModel = viewModel,
+            modifier = modifier
+        )
+        return
+    }
+
+    if (viewModel.exibirCadastroPessoa) {
+        CadastroPessoa(
             viewModel = viewModel,
             modifier = modifier
         )
@@ -146,7 +173,7 @@ fun OficinaTiaoAbertura(
                 modifier = Modifier.fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AmareloClaro)
+                    containerColor = AzulClaro)
             ) {Text(text = "Buscar",
                     color = Color.Black,
                     fontSize = 22.sp,
@@ -187,7 +214,7 @@ fun OficinaTiaoAbertura(
                 modifier = Modifier.fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AmareloClaro
+                    containerColor = AzulClaro
                 )
             ) {
                 Text(text = "Pessoas",
@@ -203,7 +230,7 @@ fun OficinaTiaoAbertura(
                 modifier = Modifier.fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AmareloClaro)
+                    containerColor = AzulClaro)
             ) {
                 Text(text = "Outros",
                     color = Color.Black,

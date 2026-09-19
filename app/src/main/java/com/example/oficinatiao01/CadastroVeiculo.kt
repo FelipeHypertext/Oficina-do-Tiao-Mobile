@@ -186,7 +186,7 @@ fun CadastroVeiculo(
                         viewModel.incluirVeiculo()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AmareloClaro
+                        containerColor = AzulClaro
                     )
                 ) {
                     Text(
