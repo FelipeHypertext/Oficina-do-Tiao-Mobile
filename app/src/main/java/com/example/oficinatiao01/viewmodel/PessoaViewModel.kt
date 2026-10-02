@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.oficinatiao01.model.Pessoa
+import com.example.oficinatiao01.model.Veiculo
 import kotlin.text.filter
 
 class PessoaViewModel {
@@ -39,6 +40,10 @@ class PessoaViewModel {
         cpf = texto
             .filter { it.isDigit() }
             .take(2)
+    }
+
+    fun abrirCadastroPessoa() {
+        exibirCadastroPessoa = true
     }
 
     fun atualizarDdd(texto: String) {
@@ -83,6 +88,30 @@ class PessoaViewModel {
                 telefone = telefone
             )
         )
+        contaPessoa = listaPessoas.count()
+        reiniciarTela()
+    }
+
+    fun incluirPessoa() {
+        val cpfEncontrado = listaPessoas.find {
+            it.cpf.trim().filter { it.isDigit() } == cpf.trim().filter { it.isDigit() }
+        }
+
+        if (cpfEncontrado != null) {
+            reiniciarTela()
+            return
+        }
+
+        listaPessoas.add(
+            Pessoa(
+                cpf = cpf,
+                nome = nome,
+                ddd = ddd,
+                telefone = telefone
+            )
+        )
+
+//        contaCarro++
         contaPessoa = listaPessoas.count()
         reiniciarTela()
     }

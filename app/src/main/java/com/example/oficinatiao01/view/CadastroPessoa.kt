@@ -1,4 +1,4 @@
-package com.example.oficinatiao01
+package com.example.oficinatiao01.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,12 +20,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.oficinatiao01.AzulClaro
+import com.example.oficinatiao01.viewmodel.PessoaViewModel
 
 @Composable
 fun CadastroPessoa (
+    viewModelPessoa: PessoaViewModel,
     modifier: Modifier = Modifier
 ) {
-    var cpf by remember { mutableStateOf("") }
+    //var cpf by remember { mutableStateOf("") }
     var nome by remember { mutableStateOf("") }
     var ddd by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
@@ -43,10 +46,9 @@ fun CadastroPessoa (
     }
 
     OutlinedTextField(
-        value = cpf,
-        onValueChange = {
-            cpf = it
-        },
+        value = viewModelPessoa.cpf,
+        readOnly = true,
+        onValueChange = {},
         label = {
             Text("CPF")
         },
@@ -99,7 +101,7 @@ fun CadastroPessoa (
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Button(
-            onClick = {},
+            onClick = { viewModelPessoa.incluirPessoa() },
             colors = ButtonDefaults.buttonColors(
                 containerColor = AzulClaro
             )
@@ -111,7 +113,7 @@ fun CadastroPessoa (
         }
 
         Button(
-            onClick = {},
+            onClick = { viewModelPessoa.reiniciarTela() },
             colors = ButtonDefaults.buttonColors(
                 containerColor = AzulClaro
             )
