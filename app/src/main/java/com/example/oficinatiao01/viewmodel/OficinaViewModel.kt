@@ -36,7 +36,7 @@ class OficinaViewModel : ViewModel() {
         placa = texto
             .uppercase()
             .filter { it.isLetterOrDigit() }
-            .take(7)
+            .take(11)
     }
 
     fun atualizarMarca(texto: String) {
@@ -102,8 +102,7 @@ class OficinaViewModel : ViewModel() {
             )
         )
 
-//        contaCarro++
-        contaCarro = listaVeiculos.count()
+        contaCarro++
         reiniciarTela()
     }
 

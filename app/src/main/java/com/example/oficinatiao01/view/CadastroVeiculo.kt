@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.oficinatiao01.AzulClaro
+import com.example.oficinatiao01.AmareloClaro
 import com.example.oficinatiao01.model.listaTiposCombustivel
 import com.example.oficinatiao01.viewmodel.OficinaViewModel
 
@@ -187,7 +187,7 @@ fun CadastroVeiculo(
                         viewModel.incluirVeiculo()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AzulClaro
+                        containerColor = AmareloClaro
                     )
                 ) {
                     Text(

@@ -40,20 +40,33 @@ import com.example.oficinatiao01.view.CadastroPessoa
 import com.example.oficinatiao01.view.CadastroVeiculo
 import com.example.oficinatiao01.viewmodel.OficinaViewModel
 import com.example.oficinatiao01.viewmodel.PessoaViewModel
+import androidx.room.Room
+import com.example.oficinatiao01.data.database.OficinaDatabase
+import com.example.oficinatiao01.data.repository.PessoaRepository
+import com.example.oficinatiao01.viewmodel.PessoaViewModelFactory
 
-val AzulClaro = Color(0xFF536DFE)
+val AmareloClaro = Color(0xFFE6D690)
 class MainActivity : ComponentActivity() {
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val database = Room.databaseBuilder(
+            applicationContext,
+            OficinaDatabase::class.java,
+            "oficina.db"
+        ).build()
+
+        val repository = PessoaRepository(
+            database.pessoaDao()
+        )
         enableEdgeToEdge()
 
         setContent {
 
             OficinaTiao01Theme {
-                TelaPrincipal()
+                TelaPrincipal(repository)
             }
         }
     }
@@ -61,42 +74,39 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaPrincipal() {
+fun TelaPrincipal(repository: PessoaRepository) {
     val viewModel: OficinaViewModel = viewModel()
-    val viewModelPessoa: PessoaViewModel = viewModel()
+    //val pessoaViewModel: PessoaViewModel = viewModel()
+    val pessoaViewModel: PessoaViewModel = viewModel(
+        factory = PessoaViewModelFactory(repository)
+    )
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
+            TopAppBar(title = {
                     Row(modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Oficina do Tião",
-                             fontSize = 28.sp,
-                             fontWeight = FontWeight.Bold
-                        )
-                        Text(text = "Carros: ${viewModel.contaCarro}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(end = 5.dp)
-                        )
-                        Text(text = "Carros: ${viewModelPessoa.contaPessoa}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(end = 5.dp)
-                        )
+                    ) {Text(text = "Oficina do Tião",
+                             fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Column() {
+                            Text(text = "Carros..: ${viewModel.contaCarro}",
+                                fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "Pessoas: ${pessoaViewModel.contaPessoa}",
+                                 fontSize = 14.sp,fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 },
                 colors = androidx.compose.material3.TopAppBarDefaults
-                    .topAppBarColors(containerColor = AzulClaro)
+                    .topAppBarColors(containerColor = AmareloClaro)
             )
         }
     ) { paddingValues ->
         OficinaTiaoAbertura(
             modifier = Modifier.padding(paddingValues)
             ,viewModel
+            ,pessoaViewModel
         )
     }
 }
@@ -105,10 +115,8 @@ fun TelaPrincipal() {
 fun OficinaTiaoAbertura(
     modifier: Modifier = Modifier,
     viewModel: OficinaViewModel,
-
+    pessoaViewModel: PessoaViewModel
 ) {
-      val viewModel: OficinaViewModel = viewModel()
-      val viewModelPessoa: PessoaViewModel = viewModel()
 
     if (viewModel.exibirCadastroVeiculo) {
         CadastroVeiculo(
@@ -118,47 +126,40 @@ fun OficinaTiaoAbertura(
         return
     }
 
-    if (viewModelPessoa.exibirCadastroPessoa) {
-        CadastroPessoa(
-            viewModelPessoa = viewModelPessoa,
+    if (pessoaViewModel.exibirCadastroPessoa) {
+        CadastroPessoa(pessoaViewModel,
             modifier = modifier
         )
         return
     }
 
-    Box(modifier = modifier.fillMaxSize()
+    Box(
+        modifier = modifier.fillMaxSize()
     ) {
         Image(painter = painterResource(
-                        id = R.drawable.carro_do_tiao),
+                id = R.drawable.carro_do_tiao),
             contentDescription = "Oficina do Tião",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = 24.dp,
-                end = 24.dp,
-                bottom = 30.dp
-            ),
+        Column(modifier = Modifier.fillMaxSize()
+                .padding(start = 24.dp,
+                    end = 24.dp,
+                    bottom = 30.dp),
+
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
-        )
-        {
-            OutlinedTextField(value =viewModel.placa,
-                onValueChange = { texto ->
-                    viewModel.atualizarPlaca(texto);
-                    viewModelPessoa.atualizarCpf(texto)
-                },
+        ) {
 
+            OutlinedTextField(value = viewModel.placa,
+                onValueChange = { texto ->
+                    viewModel.atualizarPlaca(texto) },
                 label = {
                     Text(text = "Digite a Placa ou CPF",
-                        fontSize = 20.sp)},
-
+                        fontSize = 20.sp)  },
                 textStyle = TextStyle(fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black),
-
+                    color = Color.Black  ),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
 
@@ -172,34 +173,38 @@ fun OficinaTiaoAbertura(
                     unfocusedBorderColor = Color.DarkGray,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
+
                     focusedLabelColor = Color.Yellow,
                     unfocusedLabelColor = Color.DarkGray,
+
                     cursorColor = Color.Black
                 )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            Button(onClick = { viewModel.buscarPlaca(); viewModelPessoa.buscarCpf()},
-                modifier = Modifier
-                    .fillMaxWidth()
+            Button(onClick = { viewModel.buscarPlaca() },
+                modifier = Modifier.fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AzulClaro)
-            ) {Text(text = "Buscar",
+                    containerColor = AmareloClaro
+                )
+            ) {
+                Text(
+                    text = "Buscar",
                     color = Color.Black,
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.Bold
+                )
             }
+
             if (viewModel.placaNaoEncontrada) {
                 Text(text = "Cadastrar placa?",
                     fontSize = 40.sp,
-                    color = Color.White)
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    color = Color.White )
+                Row(modifier = Modifier.fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalArrangement =Arrangement.SpaceEvenly,
+                    verticalAlignment =Alignment.CenterVertically
                 ) {
                     Text(text = "Sim",
                         fontSize = 40.sp,
@@ -209,7 +214,6 @@ fun OficinaTiaoAbertura(
                             viewModel.abrirCadastroVeiculo()
                         }
                     )
-
                     Text(text = "Não",
                         fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
@@ -221,52 +225,31 @@ fun OficinaTiaoAbertura(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Button(onClick = { viewModelPessoa.buscarCpf() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AzulClaro
-                )
-            ) {
-                Text(text = "Pessoas",
-                    color = Color.Black,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            if (viewModelPessoa.cpfNaoEncontrado) {
-                Text(
-                    text = "Cadastrar Pessoa?",
+            if (pessoaViewModel.cpfNaoEncontrado) {
+                Text(text = "Cadastrar pessoa?",
                     fontSize = 40.sp,
-                    color = Color.White
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    color = Color.White)
+                Row(modifier = Modifier.fillMaxWidth()
                         .padding(vertical = 24.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Sim",
+                    Text(text = "Sim",
                         fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Yellow,
                         modifier = Modifier.clickable {
-                            viewModelPessoa.abrirCadastroPessoa()
+                            pessoaViewModel.abrirCadastroPessoa()
+                            viewModel.reiniciarTela()
                         }
                     )
-
-                    Text(
-                        text = "Não",
+                    Text(text = "Não",
                         fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Yellow,
                         modifier = Modifier.clickable {
-                            viewModelPessoa.reiniciarTela()
+                            pessoaViewModel.reiniciarTela()
+                            viewModel.reiniciarTela()
                         }
                     )
                 }
@@ -274,14 +257,32 @@ fun OficinaTiaoAbertura(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Button(onClick = {/* Outros */},
-                modifier = Modifier
-                    .fillMaxWidth()
+            Button(onClick = {
+                pessoaViewModel.atualizarCpf(viewModel.placa)
+                pessoaViewModel.buscarCpf()
+                viewModel.reiniciarTela()
+                },
+                modifier = Modifier.fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AzulClaro)
+                    containerColor = AmareloClaro)
             ) {
-                Text(text = "Outros",
+                Text(text = "Pessoas",
+                    color = Color.Black,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(onClick = { },
+                modifier = Modifier.fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AmareloClaro
+                )
+            ) {Text(text = "Outros",
                     color = Color.Black,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold

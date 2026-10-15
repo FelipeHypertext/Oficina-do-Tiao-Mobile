@@ -3,27 +3,29 @@ package com.example.oficinatiao01.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.oficinatiao01.model.Pessoa
-import com.example.oficinatiao01.model.Veiculo
-import kotlin.text.filter
+import com.example.oficinatiao01.data.repository.PessoaRepository
+import kotlinx.coroutines.launch
 
-class PessoaViewModel {
-    var exibirCadastroPessoa by mutableStateOf(false)
+class PessoaViewModel(
+    private val repository: PessoaRepository
+) : ViewModel() {
+
+    var contaPessoa by mutableStateOf(0)
         private set
 
     var cpfNaoEncontrado by mutableStateOf(false)
         private set
 
-    var contaPessoa by mutableStateOf(0)
-        private set
-
-    private val listaPessoas = mutableListOf<Pessoa>()
-
-
-    var nome by mutableStateOf("")
+    var exibirCadastroPessoa by mutableStateOf(false)
         private set
 
     var cpf by mutableStateOf("")
+        private set
+
+    var nome by mutableStateOf("")
         private set
 
     var ddd by mutableStateOf("")
@@ -32,18 +34,18 @@ class PessoaViewModel {
     var telefone by mutableStateOf("")
         private set
 
-    fun atualizarNome(texto: String) {
-        nome = texto
+    init {
+        atualizarContador()
     }
 
     fun atualizarCpf(texto: String) {
         cpf = texto
             .filter { it.isDigit() }
-            .take(2)
+            .take(11)
     }
 
-    fun abrirCadastroPessoa() {
-        exibirCadastroPessoa = true
+    fun atualizarNome(texto: String) {
+        nome = texto
     }
 
     fun atualizarDdd(texto: String) {
@@ -55,65 +57,62 @@ class PessoaViewModel {
     fun atualizarTelefone(texto: String) {
         telefone = texto
             .filter { it.isDigit() }
-            .take(2)
+            .take(9)
     }
 
     fun buscarCpf() {
-        if (cpf.isBlank()) return
 
-        val pessoaEncontrada = listaPessoas.find {
-            it.cpf == cpf
-        }
-
-        if (pessoaEncontrada == null) {
-            cpfNaoEncontrado = true
-        } else {
-            cpfNaoEncontrado = false
-            nome = pessoaEncontrada.nome
-            ddd = pessoaEncontrada.ddd
-            telefone = pessoaEncontrada.telefone
-            exibirCadastroPessoa = true
-        }
-
-        if (pessoaEncontrada != null) {
-            reiniciarTela()
+        if (cpf.isBlank()) {
             return
         }
 
-        listaPessoas.add(
-            Pessoa(
-                cpf = cpf,
-                nome = nome,
-                ddd = ddd,
-                telefone = telefone
-            )
-        )
-        contaPessoa = listaPessoas.count()
-        reiniciarTela()
+        viewModelScope.launch {
+
+            val pessoaEncontrada =
+                repository.buscarCpf(cpf)
+
+            if (pessoaEncontrada == null) {
+                cpfNaoEncontrado = true
+            } else {
+                cpfNaoEncontrado = false
+                nome = pessoaEncontrada.nome
+                ddd = pessoaEncontrada.ddd
+                telefone = pessoaEncontrada.telefone
+                exibirCadastroPessoa = true
+            }
+        }
+    }
+
+    fun abrirCadastroPessoa() {
+        exibirCadastroPessoa = true
     }
 
     fun incluirPessoa() {
-        val cpfEncontrado = listaPessoas.find {
-            it.cpf.trim().filter { it.isDigit() } == cpf.trim().filter { it.isDigit() }
-        }
 
-        if (cpfEncontrado != null) {
-            reiniciarTela()
-            return
-        }
-
-        listaPessoas.add(
-            Pessoa(
-                cpf = cpf,
-                nome = nome,
-                ddd = ddd,
-                telefone = telefone
-            )
+        val pessoa = Pessoa(
+            cpf = cpf,
+            nome = nome,
+            ddd = ddd,
+            telefone = telefone
         )
 
-//        contaCarro++
-        contaPessoa = listaPessoas.count()
-        reiniciarTela()
+        viewModelScope.launch {
+
+            val resultado = repository.inserir(pessoa)
+
+            if (resultado != -1L) {
+                contaPessoa = repository.contar()
+            }
+
+            reiniciarTela()
+        }
+    }
+
+    private fun atualizarContador() {
+
+        viewModelScope.launch {
+            contaPessoa = repository.contar()
+        }
     }
 
     fun reiniciarTela() {
