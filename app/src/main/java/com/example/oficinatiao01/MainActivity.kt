@@ -172,7 +172,7 @@ fun OficinaTiaoAbertura(
         modifier = modifier.fillMaxSize()
     ) {
         Image(painter = painterResource(
-                id = R.drawable.carro_do_tiao),
+                id = R.drawable._096133996790209615),
             contentDescription = "Oficina do Tião",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
