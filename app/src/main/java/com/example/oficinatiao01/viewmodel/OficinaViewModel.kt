@@ -4,11 +4,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.oficinatiao01.data.repository.VeiculoRepository
+import com.example.oficinatiao01.model.Pessoa
 import com.example.oficinatiao01.model.Veiculo
+import kotlinx.coroutines.launch
 
-class OficinaViewModel : ViewModel() {
+class OficinaViewModel(
+    private val repository: VeiculoRepository
+) : ViewModel() {
     private val listaVeiculos = mutableListOf<Veiculo>()
-
     var contaCarro by mutableStateOf(0)
         private set
     var placaNaoEncontrada by mutableStateOf(false)
@@ -30,6 +35,9 @@ class OficinaViewModel : ViewModel() {
         private set
 
     var idTipoCombustivel by mutableStateOf(1)
+        private set
+
+    var modoEdicao by mutableStateOf(false)
         private set
 
     fun atualizarPlaca(texto: String) {
@@ -59,21 +67,19 @@ class OficinaViewModel : ViewModel() {
         if (placa.isBlank()) {
             return
         }
-
-        val veiculoEncontrado = listaVeiculos.find {
-            it.placa.uppercase() == placa.uppercase()
-        }
-
-        if (veiculoEncontrado == null) {
-            placaNaoEncontrada = true
-        } else {
-            placaNaoEncontrada = false
-            marca = veiculoEncontrado.marca
-            modelo = veiculoEncontrado.modelo
-            ano = veiculoEncontrado.ano.toString()
-            idTipoCombustivel =
-                veiculoEncontrado.idTipoCombustivel
-            exibirCadastroVeiculo = true
+        viewModelScope.launch {
+            val veiculoEncontrado = repository.buscarPlaca(placa)
+            if (veiculoEncontrado == null) {
+                placaNaoEncontrada = true
+            } else {
+                placaNaoEncontrada = false
+                marca = veiculoEncontrado.marca
+                modelo = veiculoEncontrado.modelo
+                ano = veiculoEncontrado.ano.toString()
+                idTipoCombustivel = veiculoEncontrado.idTipoCombustivel
+                exibirCadastroVeiculo = true
+                modoEdicao = true
+            }
         }
     }
 
@@ -81,28 +87,29 @@ class OficinaViewModel : ViewModel() {
         exibirCadastroVeiculo = true
     }
 
+    private fun atualizarContador() {
+        viewModelScope.launch {
+            contaCarro = repository.contar()
+        }
+    }
+
     fun incluirVeiculo() {
         val anoInt = ano.toIntOrNull() ?: return
-        val veiculoAchado = listaVeiculos.find {
-            it.placa.uppercase() == placa.uppercase()
-        }
-
-        if (veiculoAchado != null) {
-            reiniciarTela()
-            return
-        }
-
-         listaVeiculos.add(
-            Veiculo(
-                placa = placa,
-                marca = marca,
-                modelo = modelo,
-                ano = anoInt,
-                idTipoCombustivel = idTipoCombustivel
-            )
+        val veiculo = Veiculo(
+            placa = placa,
+            marca = marca,
+            modelo = modelo,
+            ano = anoInt,
+            idTipoCombustivel = idTipoCombustivel
         )
+        viewModelScope.launch {
+            val resultado = repository.inserir(veiculo)
 
-        contaCarro++
+            if (resultado != -1L) {
+                contaCarro = repository.contar()
+            }
+            reiniciarTela()
+        }
         reiniciarTela()
     }
 
@@ -116,5 +123,35 @@ class OficinaViewModel : ViewModel() {
         exibirCadastroVeiculo = false
 
         idTipoCombustivel = 1
+        modoEdicao = false
+    }
+
+    fun gravarVeiculo() {
+        if(modoEdicao)
+        {
+            atualizarVeiculo()
+        }
+        else
+        {
+            incluirVeiculo()
+        }
+    }
+
+    fun atualizarVeiculo() {
+        val anoInt = ano.toIntOrNull() ?: return
+        val veiculo = Veiculo(
+            placa = placa,
+            marca = marca,
+            modelo = modelo,
+            ano = anoInt,
+            idTipoCombustivel = idTipoCombustivel
+        )
+        viewModelScope.launch {
+            repository.atualizar(
+                veiculo
+            )
+            atualizarContador()
+            reiniciarTela()
+        }
     }
 }

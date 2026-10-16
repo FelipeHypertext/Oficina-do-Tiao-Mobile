@@ -84,11 +84,11 @@ fun CadastroPessoa(pessoaViewModel: PessoaViewModel,
             // distribui espaços iguais entre os elementos e nas duas extremidades
         ) {
             Button(
-                onClick = { pessoaViewModel.incluirPessoa() },
+                onClick = { pessoaViewModel.gravarPessoa() },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AmareloClaro )
             ) {
-                Text(text = "Incluir",
+                Text(text = "Gravar",
                     color = Color.Black
                 )
             }

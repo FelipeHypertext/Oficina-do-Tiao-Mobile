@@ -184,14 +184,14 @@ fun CadastroVeiculo(
 
                 Button(
                     onClick = {
-                        viewModel.incluirVeiculo()
+                        viewModel.gravarVeiculo()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AmareloClaro
                     )
                 ) {
                     Text(
-                        text = "Incluir",
+                        text = "Gravar",
                         color = Color.Black
                     )
                 }

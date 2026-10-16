@@ -34,6 +34,9 @@ class PessoaViewModel(
     var telefone by mutableStateOf("")
         private set
 
+    var modoEdicao by mutableStateOf(false)
+        private set
+
     init {
         atualizarContador()
     }
@@ -79,6 +82,8 @@ class PessoaViewModel(
                 ddd = pessoaEncontrada.ddd
                 telefone = pessoaEncontrada.telefone
                 exibirCadastroPessoa = true
+
+                modoEdicao = true
             }
         }
     }
@@ -123,5 +128,33 @@ class PessoaViewModel(
 
         cpfNaoEncontrado = false
         exibirCadastroPessoa = false
+        modoEdicao = false
+    }
+
+    fun gravarPessoa() {
+        if(modoEdicao)
+        {
+            atualizarPessoa()
+        }
+        else
+        {
+            incluirPessoa()
+        }
+    }
+
+    fun atualizarPessoa() {
+
+        val pessoa = Pessoa(
+            cpf = cpf,
+            nome = nome,
+            ddd = ddd,
+            telefone = telefone
+        )
+        viewModelScope.launch {
+            repository.atualizar(
+                pessoa
+            )
+            reiniciarTela()
+        }
     }
 }

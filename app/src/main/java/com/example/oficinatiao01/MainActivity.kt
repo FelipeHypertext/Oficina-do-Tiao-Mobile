@@ -41,8 +41,12 @@ import com.example.oficinatiao01.view.CadastroVeiculo
 import com.example.oficinatiao01.viewmodel.OficinaViewModel
 import com.example.oficinatiao01.viewmodel.PessoaViewModel
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.oficinatiao01.data.database.OficinaDatabase
 import com.example.oficinatiao01.data.repository.PessoaRepository
+import com.example.oficinatiao01.data.repository.VeiculoRepository
+import com.example.oficinatiao01.viewmodel.OficinaViewModelFactory
 import com.example.oficinatiao01.viewmodel.PessoaViewModelFactory
 
 val AmareloClaro = Color(0xFFE6D690)
@@ -52,21 +56,45 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val MIGRATION_1_2 =
+            object : Migration(1, 2) {
+                override fun migrate(
+                    database: SupportSQLiteDatabase
+                ) {
+                    database.execSQL(
+                        """
+                CREATE TABLE IF NOT EXISTS veiculo(
+                    placa TEXT NOT NULL,
+                    marca TEXT NOT NULL,
+                    modelo TEXT NOT NULL,
+                    ano INTEGER NOT NULL,
+                    idTipoCombustivel INTEGER NOT NULL,
+                    PRIMARY KEY(placa)
+                )
+                """
+                    )
+                }
+            }
+
         val database = Room.databaseBuilder(
             applicationContext,
             OficinaDatabase::class.java,
             "oficina.db"
-        ).build()
+        )
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
         val repository = PessoaRepository(
-            database.pessoaDao()
-        )
+            database.pessoaDao())
+
+        val veiculoRepository = VeiculoRepository(
+                database.veiculoDao())
         enableEdgeToEdge()
 
         setContent {
 
             OficinaTiao01Theme {
-                TelaPrincipal(repository)
+                TelaPrincipal(repository, veiculoRepository)
             }
         }
     }
@@ -74,8 +102,15 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaPrincipal(repository: PessoaRepository) {
-    val viewModel: OficinaViewModel = viewModel()
+fun TelaPrincipal(repository: PessoaRepository
+                , veiculoRepository: VeiculoRepository) {
+    //val viewModel: OficinaViewModel = viewModel()
+    val viewModel: OficinaViewModel = viewModel(
+            factory = OficinaViewModelFactory(
+                veiculoRepository
+            )
+        )
+
     //val pessoaViewModel: PessoaViewModel = viewModel()
     val pessoaViewModel: PessoaViewModel = viewModel(
         factory = PessoaViewModelFactory(repository)
